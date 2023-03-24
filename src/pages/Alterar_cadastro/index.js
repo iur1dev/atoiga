@@ -16,7 +16,9 @@ import { useNavigation } from "@react-navigation/native";
 
 import { TextInputMask } from "react-native-masked-text";
 
-export default function SignIn() {
+export default function SignIn({ route }) {
+  const id = route.params;
+
   const [nome, setNome] = useState(null);
   const [data_nasc, setData_nasc] = useState(null);
   const [rg, setRg] = useState(null);
@@ -26,7 +28,7 @@ export default function SignIn() {
   const [celular, setCelular] = useState(null);
 
   const [cep, setCep] = useState(null);
-  const [cepEscolhido, setCepEscolhido] = useState("");
+  const [cepEscolhido, setCepEscolhido] = useState(null);
   const [bairro, setBairro] = useState(null);
   const [logradouro, setLogradouro] = useState(null);
   const [localidade, setLocalidade] = useState(null);
@@ -34,11 +36,49 @@ export default function SignIn() {
 
   const [empresa, setEmpresa] = useState(null);
   const [cep2, setCep2] = useState(null);
-  const [cepEscolhido2, setCepEscolhido2] = useState("");
+  const [cepEscolhido2, setCepEscolhido2] = useState(null);
   const [bairro2, setBairro2] = useState(null);
   const [logradouro2, setLogradouro2] = useState(null);
   const [localidade2, setLocalidade2] = useState(null);
   const [numero2, setNumero2] = useState(null);
+  const [dtCriacao, setDtCriacao] = useState(null);
+  const [dtAlteracao, setDtAlteracao] = useState(null);
+
+  useEffect(() => {
+    async function exibirInfo() {
+      try {
+        const response = await fetch("http://10.0.2.2:3000/api/atoiga2/" + id);
+        const data = await response.json();
+
+        setNome(data.result[0].nome);
+        setData_nasc(data.result[0].data_nasc);
+        setRg(data.result[0].rg);
+        setCpf(data.result[0].cpf);
+        setTelefone(data.result[0].tel);
+        setCelular(data.result[0].cel);
+        setCep(data.result[0].cep_cli);
+        setBairro(data.result[0].bairro_cli);
+        setLogradouro(data.result[0].rua_cli);
+        setLocalidade(data.result[0].cidade_cli);
+        setNumero(data.result[0].num_cli);
+        setEmpresa(data.result[0].empresa);
+        setCep2(data.result[0].cep_empr);
+        setBairro2(data.result[0].bairro_empr);
+        setLogradouro2(data.result[0].rua_empr);
+        setLocalidade2(data.result[0].cidade_empr);
+        setNumero2(data.result[0].num_empr);
+        setDtCriacao(data.result[0].dt_criacao);
+        if (data.result[0].dt_att == null) {
+          setDtAlteracao("Não teve alteração");
+        } else {
+          setDtAlteracao(data.result[0].dt_att);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    exibirInfo();
+  }, []);
 
   const getCepData = () => {
     const endpoint = `https://viacep.com.br/ws/${cep}/json/`;
@@ -81,68 +121,53 @@ export default function SignIn() {
   const navigation = useNavigation();
 
   const handleSignIn = () => {
-    if (
-      nome === null ||
-      data_nasc === null ||
-      celular === null ||
-      cpf === null ||
-      rg === null ||
-      cep === null ||
-      numero === null ||
-      empresa === null ||
-      cep2 === null ||
-      numero2 === null
-    ) {
-      Alert.alert("Preencha Tudo !!!");
-    } else {
-      const requestOptions = {
-        method: "POST",
-        headers: { "Content-type": "application/x-www-form-urlencoded" },
-        body:
-          `nome=` +
-          nome +
-          `&data_nasc=` +
-          data_nasc +
-          `&rg=` +
-          rg +
-          `&cpf=` +
-          cpf +
-          `&tel=` +
-          telefone +
-          `&cel=` +
-          celular +
-          `&cep_cli=` +
-          cep +
-          `&num_cli=` +
-          numero +
-          `&rua_cli=` +
-          cepEscolhido.logradouro +
-          `&bairro_cli=` +
-          cepEscolhido.bairro +
-          `&cidade_cli=` +
-          cepEscolhido.localidade +
-          `&empresa=` +
-          empresa +
-          `&cep_empr=` +
-          cep2 +
-          `&num_empr=` +
-          numero2 +
-          `&rua_empr=` +
-          cepEscolhido2.logradouro +
-          `&bairro_empr=` +
-          cepEscolhido2.bairro +
-          `&cidade_empr=` +
-          cepEscolhido2.localidade +
-          `&`,
-      };
+    const requestOptions = {
+      method: "PUT",
+      headers: { "Content-type": "application/x-www-form-urlencoded" },
+      body:
+        `nome=` +
+        nome +
+        `&data_nasc=` +
+        data_nasc +
+        `&rg=` +
+        rg +
+        `&cpf=` +
+        cpf +
+        `&tel=` +
+        telefone +
+        `&cel=` +
+        celular +
+        `&cep_cli=` +
+        cep +
+        `&num_cli=` +
+        numero +
+        `&rua_cli=` +
+        logradouro +
+        `&bairro_cli=` +
+        bairro +
+        `&cidade_cli=` +
+        localidade +
+        `&empresa=` +
+        empresa +
+        `&cep_empr=` +
+        cep2 +
+        `&num_empr=` +
+        numero2 +
+        `&rua_empr=` +
+        logradouro +
+        `&bairro_empr=` +
+        bairro +
+        `&cidade_empr=` +
+        localidade +
+        `&`,
+    };
 
-      fetch("http://10.0.2.2:3000/api/atoiga_insert", requestOptions)
-        .then((response) => response.json())
-        .then((data) => console.log(data))
-        .catch((error) => console.error(error));
-      navigation.navigate("Clientes");
-      Alert.alert("Cadastrado");
-    }
+    fetch("http://10.0.2.2:3000/api/atoiga_update/" + id, requestOptions)
+      .then((response) => response.json())
+      .then((data) => console.log(data))
+      .catch((error) => console.error(error));
+    navigation.navigate("Clientes");
+    Alert.alert("Cadastro alterado");
   };
 
   function showCpf() {
@@ -173,43 +198,27 @@ export default function SignIn() {
             placeholder="Nome"
           />
 
-          <TextInputMask
-            type={"datetime"}
+          <TextInput
             style={styles.input}
-            onChangeText={(text) => setData_nasc(text)}
+            onChangeText={setData_nasc}
             value={data_nasc}
             placeholder="Data de Nascimento"
-            options={{
-              format: "DD/MM/YYYY",
-            }}
           />
 
-          <TextInputMask
+          <TextInput
             keyboardType="numeric"
             style={styles.input}
-            onChangeText={(text) => setCelular(text)}
+            onChangeText={setCelular}
             value={celular}
             placeholder="Celular"
-            type={"cel-phone"}
-            options={{
-              maskType: "BRL",
-              withDDD: "true",
-              dddMask: "(99) ",
-            }}
           />
 
-          <TextInputMask
+          <TextInput
             keyboardType="numeric"
             style={styles.input}
-            onChangeText={(text) => setTelefone(text)}
+            onChangeText={setTelefone}
             value={telefone}
             placeholder="Telefone"
-            type={"cel-phone"}
-            options={{
-              maskType: "BRL",
-              withDDD: "true",
-              dddMask: "(99) ",
-            }}
           />
 
           <TextInputMask
@@ -268,7 +277,7 @@ export default function SignIn() {
             <TextInput
               style={styles.input}
               onChangeText={setLogradouro}
-              value={cepEscolhido}
+              value={logradouro}
               placeholder="Rua"
             />
           )}
@@ -284,7 +293,7 @@ export default function SignIn() {
             <TextInput
               style={styles.input}
               onChangeText={setBairro}
-              value={cepEscolhido}
+              value={bairro}
               placeholder="Bairro"
             />
           )}
@@ -300,7 +309,7 @@ export default function SignIn() {
             <TextInput
               style={styles.input}
               onChangeText={setLocalidade}
-              value={cepEscolhido}
+              value={localidade}
               placeholder="Cidade"
             />
           )}
@@ -346,7 +355,7 @@ export default function SignIn() {
             <TextInput
               style={styles.input}
               onChangeText={setLogradouro2}
-              value={cepEscolhido2}
+              value={logradouro2}
               placeholder="Rua"
             />
           )}
@@ -362,7 +371,7 @@ export default function SignIn() {
             <TextInput
               style={styles.input}
               onChangeText={setBairro2}
-              value={cepEscolhido2}
+              value={bairro2}
               placeholder="Bairro"
             />
           )}
@@ -378,13 +387,29 @@ export default function SignIn() {
             <TextInput
               style={styles.input}
               onChangeText={setLocalidade2}
-              value={cepEscolhido2}
+              value={localidade2}
               placeholder="Cidade"
             />
           )}
 
+          <TextInput
+            style={styles.input}
+            onChangeText={setDtCriacao}
+            value={"Data de criação:" + dtCriacao}
+            placeholder="Data de criação"
+            editable={false}
+          />
+
+          <TextInput
+            style={styles.input}
+            onChangeText={setDtAlteracao}
+            value={"Data de alteração:" + dtAlteracao}
+            placeholder="Data de alteração"
+            editable={false}
+          />
+
           <TouchableOpacity style={styles.button} onPress={handleSignIn}>
-            <Text style={styles.buttonTxt}>Cadastrar</Text>
+            <Text style={styles.buttonTxt}>Alterar</Text>
           </TouchableOpacity>
         </Animatable.View>
       </ScrollView>

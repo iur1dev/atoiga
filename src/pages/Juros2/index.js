@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,30 +9,44 @@ import {
 } from "react-native";
 
 import * as Animatable from "react-native-animatable";
+
 import { useNavigation } from "@react-navigation/native";
+
 import { useForm, Controller } from "react-hook-form";
 
 export default function SignIn() {
   const navigation = useNavigation();
-  const [login, setLogin] = useState(null);
-  const [senha, setSenha] = useState(null);
 
-  async function verificarEntrada() {
-    try {
-      const response = await fetch(
-        "http://10.0.2.2:3000/api/adm/" + login + "/" + senha + ""
-      );
+  const [juros, setJuros] = useState("");
+  const [juros2, setJuros2] = useState(null);
+
+  useEffect(() => {
+    async function carregarJuros() {
+      const response = await fetch("http://10.0.2.2:3000/api/juros");
       const data = await response.json();
-
-      if (data.result[0] != null) {
-        navigation.navigate("Home");
-      } else {
-        Alert.alert("Login ou senha incorreto");
-      }
-    } catch (error) {
-      console.error(error);
+      setJuros(data.result[0].juros);
     }
-  }
+    carregarJuros();
+  }, []);
+
+  const handleSignIn = () => {
+    if (juros2 === null) {
+      Alert.alert("Preencha o valor");
+    } else {
+      const requestOptions = {
+        method: "PUT",
+        headers: { "Content-type": "application/x-www-form-urlencoded" },
+        body: `juros=` + juros2,
+      };
+
+      fetch("http://10.0.2.2:3000/api/juros_update", requestOptions)
+        .then((response) => response.json())
+        .then((data) => console.log(data))
+        .catch((error) => console.error(error));
+      navigation.navigate("Home");
+      Alert.alert("Juros alterado !!!");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -41,29 +55,21 @@ export default function SignIn() {
         delay={500}
         style={styles.containerHeader}
       >
-        <Text style={styles.message}>Tela Login</Text>
+        <Text style={styles.message}>Juros</Text>
       </Animatable.View>
 
       <Animatable.View animation="fadeInUp" style={styles.containerForm}>
-        <Text style={styles.title}>Login</Text>
+        <Text style={styles.title}>Valor do juros: {juros}%</Text>
+
         <TextInput
+          placeholder="Exemplo: para mudar para 30% digite apenas 30"
           style={styles.input}
-          onChangeText={setLogin}
-          value={login}
-          placeholder="user"
+          value={juros2}
+          onChangeText={setJuros2}
         />
 
-        <Text style={styles.title}>Senha</Text>
-        <TextInput
-          secureTextEntry={true}
-          style={styles.input}
-          onChangeText={setSenha}
-          value={senha}
-          placeholder="password"
-        />
-
-        <TouchableOpacity style={styles.button} onPress={verificarEntrada}>
-          <Text style={styles.buttonText}>Acessar</Text>
+        <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+          <Text style={styles.buttonText}>Mudar</Text>
         </TouchableOpacity>
       </Animatable.View>
     </View>
